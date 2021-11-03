@@ -1,11 +1,8 @@
 from config import API, SECRET, markets, tick_interval
 from binance.client import Client
-import pandas as pd
-import numpy as np
 from Util import *
 from time import sleep
 from Strategy import calculateIndicators, strategyDecision
-import math
 
 
 class Bot:

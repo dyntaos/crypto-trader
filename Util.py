@@ -20,7 +20,8 @@ def binanceToStockDataFrame(klines):
                                                     'Taker buy quote asset volume',
                                                     'Ignore'))
     df['Open Time'] = pd.to_datetime(df['Open Time'], unit='ms')
-    df = stockstats.StockDataFrame(df, index_column="Open Time")
+    df.set_index("Open Time")
+    df = stockstats.StockDataFrame(df)
     return df
 
 

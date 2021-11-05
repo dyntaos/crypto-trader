@@ -1,4 +1,4 @@
-from config import API, SECRET, markets, tick_interval
+from config import *
 from binance.client import Client
 from Util import *
 from time import sleep
@@ -21,30 +21,25 @@ class Bot:
         print('- Done fetching balance')
         self.generateBoughtStatus()
         self.generateTicks()
-        print(f'- Balance: {self.usdt:.2f} USDT')
+        print(f'- Balance: {self.usdt:.4f} {base_currency}')
 
     def run(self):
+        iterations = 0
         print("- Bot is running")
         print('\n--------TRADES-------\n')
         while True:
             try:
+                if iterations % holdings_update_cycles == holdings_update_cycles - 1:
+                    self.refreshBalance()
+                    self.generateBoughtStatus()
+                    print(f'- Balance: {self.usdt:.4f} {base_currency}')
+
                 for symbol in markets:
-                    symbol = symbol + 'USDT'
+                    symbol = symbol + base_currency
                     klines = self.getKlines(symbol)
 
-                    # self.buy(symbol, klines)
-                    # sleep(5)
-                    # klines = self.getKlines(symbol)
-                    # self.sell(symbol, klines)
-                    # return
-
-                    ema8, ema13, ema21, ema34, ema55, rsi, kFast = calculateIndicators(
-                        klines)
-
-                    enterLong, exitLong = strategyDecision(
-                        ema8, ema13, ema21, ema34, ema55, rsi, kFast)
-                
-
+                    indicators = calculateIndicators(klines)
+                    enterLong, exitLong = strategyDecision(*indicators)
 
                     if self.bought[symbol]:
                         if exitLong:
@@ -62,7 +57,7 @@ class Bot:
     def generateBoughtStatus(self):
         print('- Generating bought/sold statuses...')
         for coin in markets:
-            coin += 'USDT'
+            coin += base_currency
             symbol_orders = self.client.get_all_orders(symbol=coin, limit=1)
 
             if len(symbol_orders) > 0 and symbol_orders[0]['side'] == 'BUY' and symbol_orders[0]['status'] == 'FILLED':
@@ -80,7 +75,7 @@ class Bot:
 
             amount = truncate(amount, self.ticks[symbol])
 
-            print(f'Buying {amount} {symbol} @ {price} USDT...')
+            print(f'Buying {amount} {symbol} @ {price} {base_currency}...')
 
             buy_market = self.client.order_market_buy(symbol=symbol, quoteOrderQty=self.usdt)
 
@@ -99,14 +94,14 @@ class Bot:
 
         else:
             if not any(self.bought.values()):
-                print(f"{symbol} | Not enough USDT to trade (minimum of $10)")
+                print(f"{symbol} | Not enough {base_currency} to trade (minimum of $10)")
 
     def sell(self, symbol, df):
         self.refreshBalance()
 
         symbol_balance = 0
         for s in self.balance:
-            if s['asset'] + 'USDT' == symbol:
+            if s['asset'] + base_currency == symbol:
                 symbol_balance = s['free']
 
         # TESTING
@@ -119,7 +114,7 @@ class Bot:
 
             amount = truncate(symbol_balance, self.ticks[symbol])
 
-            print(f'Selling {amount} {symbol} @ {price} USDT...')
+            print(f'Selling {amount} {symbol} @ {price} {base_currency}...')
             sell_market = self.client.order_market_sell(symbol=symbol, quantity=amount)
 
             # TESTING
@@ -132,7 +127,7 @@ class Bot:
             ###
 
             net = float(sell_market['cummulativeQuoteQty']) - float(self.bought[symbol]['cummulativeQuoteQty'])
-            print(f'Net profit: {net} USDT\n')
+            print(f'Net profit: {net} {base_currency}\n')
 
             self.bought[symbol] = None
 
@@ -149,7 +144,7 @@ class Bot:
         except Exception as ex:
             print(ex)
             for coin in markets:
-                coin += 'USDT'
+                coin += base_currency
                 self.getSymbolPrecision(coin)
             savePickle(self.ticks, 'Ticks.pickle')
 
@@ -163,7 +158,7 @@ class Bot:
     def getKlines(self, symbol):
         raw_klines = self.client.get_klines(
             symbol=symbol, interval=tick_interval)
-        return binanceToPandas(raw_klines)
+        return binanceToStockDataFrame(raw_klines)
 
     def refreshBalance(self):
         balance = self.client.get_account()["balances"]
@@ -174,7 +169,7 @@ class Bot:
                 dict["free"] = float(dict["free"])
                 dict["locked"] = float(dict["locked"])
 
-                if dict['asset'] == 'USDT':
+                if dict['asset'] == base_currency:
                     self.usdt = float(dict["free"])
                 elif (dict["free"] > 0.0):
                     dict["asset"] = dict["asset"]

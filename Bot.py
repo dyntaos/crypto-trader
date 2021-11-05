@@ -52,6 +52,7 @@ class Bot:
             except Exception as ex:
                 print(ex) 
                 sleep(10)
+            iterations += 1
 
 
     def generateBoughtStatus(self):

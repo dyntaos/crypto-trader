@@ -2,23 +2,25 @@ import pandas as pd
 import numpy as np
 import math
 import pickle
+import stockstats
 
 
-def binanceToPandas(klines):
-    klines = np.array(klines)
-    df = pd.DataFrame(klines.reshape(-1, 12), dtype=float, columns=('Open Time',
-                                                                    'Open',
-                                                                    'High',
-                                                                    'Low',
-                                                                    'Close',
-                                                                    'Volume',
-                                                                    'Close time',
-                                                                    'Quote asset volume',
-                                                                    'Number of trades',
-                                                                    'Taker buy base asset volume',
-                                                                    'Taker buy quote asset volume',
-                                                                    'Ignore'))
+def binanceToStockDataFrame(klines):
+    klines = np.array(klines).reshape(-1, 12)
+    df = pd.DataFrame(klines, dtype=float, columns=('Open Time',
+                                                    'open',
+                                                    'high',
+                                                    'low',
+                                                    'close',
+                                                    'volume',
+                                                    'Close time',
+                                                    'Quote asset volume',
+                                                    'amount',
+                                                    'Taker buy base asset volume',
+                                                    'Taker buy quote asset volume',
+                                                    'Ignore'))
     df['Open Time'] = pd.to_datetime(df['Open Time'], unit='ms')
+    df = stockstats.StockDataFrame(df, index_column="Open Time")
     return df
 
 

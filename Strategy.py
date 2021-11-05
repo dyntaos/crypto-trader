@@ -1,58 +1,27 @@
-import talib
+from pandas.core import indexing
+from config import *
 
 
-def strategyDecision(ema8, ema13, ema21, ema34, ema55, rsi, kFast):
-    ema8 = ema8.iloc[-1]
-    ema13 = ema13.iloc[-1]
-    ema21 = ema21.iloc[-1]
-    ema34 = ema34.iloc[-1]
-    ema55 = ema55.iloc[-1]
-    rsi = rsi.iloc[-1]
-    kFast = kFast.iloc[-1]
-
-    return strategyCalculator(ema8, ema13, ema21, ema34, ema55, rsi, kFast)
+def strategyDecision(*args):
+    indicators = [x.iloc[-1] for x in args]
+    return strategyCalculator(*indicators)
 
 
-def strategyCalculator(ema8, ema13, ema21, ema34, ema55, rsi, kFast):
+def strategyCalculator(kdj_cross_up, kdj_cross_down):
 
-    # MOMENTUM
-    longEmaCondition = ema8 > ema13 and ema13 > ema21 and ema21 > ema34 and ema34 > ema55
-    exitLongEmaCondition = ema21 < ema55
-
-    # RSI
-    longRsiCondition = rsi < 65
-    exitLongRsiCondition = rsi > 70
-
-    # STOCHASTIC
-    longStochasticCondition = kFast < 80
-    exitLongStochasticCondition = kFast > 95
+    # KDJ J/D cross-over
+    longKdjCrossCondition = kdj_cross_up
+    exitLongKdjCondition = kdj_cross_down
 
     # STRAT
-    enterLongCondition = longEmaCondition and longRsiCondition and longStochasticCondition
-    exitLongCondition = (
-        exitLongEmaCondition or exitLongRsiCondition or exitLongStochasticCondition)
-
+    enterLongCondition = longKdjCrossCondition
+    exitLongCondition = exitLongKdjCondition
 
     return (enterLongCondition, exitLongCondition)
 
 
 def calculateIndicators(klines):
-    ema8 = talib.EMA(klines['Close'], timeperiod=8)
-    ema13 = talib.EMA(klines['Close'], timeperiod=13)
-    ema21 = talib.EMA(klines['Close'], timeperiod=21)
-    ema34 = talib.EMA(klines['Close'], timeperiod=34)
-    ema55 = talib.EMA(klines['Close'], timeperiod=55)
-    # ----------
-    #  OSCILLATORS
-    # ----------
+    kdj_j_cross_up_d = klines["kdjj_{}_xu_kdjd_{}".format(kdj_moving_avg, kdj_moving_avg)]
+    kdj_j_cross_down_d = klines["kdjj_{}_xd_kdjd_{}".format(kdj_moving_avg, kdj_moving_avg)]
 
-    rsi = talib.RSI(klines['Close'], timeperiod=14)
-
-    # ----------
-    #  STOCHASTIC
-    # ----------
-
-    kFast, dFast = talib.STOCHF(
-        klines['High'], klines['Low'], klines['Close'],  fastk_period=14)
-
-    return (ema8, ema13, ema21, ema34, ema55, rsi, kFast)
+    return (kdj_j_cross_up_d, kdj_j_cross_down_d)

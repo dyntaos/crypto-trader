@@ -1,4 +1,4 @@
-from config import API, SECRET, markets, tick_interval
+from config import *
 from binance.client import Client
 import pandas as pd
 import numpy as np
@@ -32,22 +32,11 @@ class Bot:
         while True:
             try:
                 for symbol in markets:
-                    symbol = symbol + 'USDT'
+                    symbol = symbol + base_currency
                     klines = self.getKlines(symbol)
 
-                    # self.buy(symbol, klines)
-                    # sleep(5)
-                    # klines = self.getKlines(symbol)
-                    # self.sell(symbol, klines)
-                    # return
-
-                    ema8, ema13, ema21, ema34, ema55, rsi, kFast = calculateIndicators(
-                        klines)
-
-                    enterLong, exitLong = strategyDecision(
-                        ema8, ema13, ema21, ema34, ema55, rsi, kFast)
-                
-
+                    indicators = calculateIndicators(klines)
+                    enterLong, exitLong = strategyDecision(*indicators)
 
                     if self.bought[symbol]:
                         if exitLong:
@@ -166,7 +155,7 @@ class Bot:
     def getKlines(self, symbol):
         raw_klines = self.client.get_klines(
             symbol=symbol, interval=tick_interval)
-        return binanceToPandas(raw_klines)
+        return binanceToStockDataFrame(raw_klines)
 
     def refreshBalance(self):
         balance = self.client.get_account()["balances"]

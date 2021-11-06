@@ -71,7 +71,7 @@ class Bot:
         self.refreshBalance()
 
         if self.usdt > 10:
-            price = df["Close"][len(df) - 1]
+            price = df["close"][len(df) - 1]
             amount = self.usdt/price
 
             amount = truncate(amount, self.ticks[symbol])
@@ -109,7 +109,7 @@ class Bot:
         #symbol_balance = self.bought[symbol]['executedQty']
         ###
 
-        price = df["Close"][len(df) - 1]
+        price = df["close"][len(df) - 1]
 
         if symbol_balance * price > 10:
 

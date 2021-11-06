@@ -7,20 +7,20 @@ import stockstats
 
 def binanceToStockDataFrame(klines):
     klines = np.array(klines).reshape(-1, 12)
-    df = pd.DataFrame(klines, dtype=float, columns=('Open Time',
+    df = pd.DataFrame(klines, dtype=float, columns=('open time',
                                                     'open',
                                                     'high',
                                                     'low',
                                                     'close',
                                                     'volume',
-                                                    'Close time',
-                                                    'Quote asset volume',
+                                                    'close time',
+                                                    'quote asset volume',
                                                     'amount',
-                                                    'Taker buy base asset volume',
-                                                    'Taker buy quote asset volume',
-                                                    'Ignore'))
-    df['Open Time'] = pd.to_datetime(df['Open Time'], unit='ms')
-    df.set_index("Open Time")
+                                                    'taker buy base asset volume',
+                                                    'taker buy quote asset volume',
+                                                    'ignore'))
+    df['open time'] = pd.to_datetime(df['open time'], unit='ms')
+    df.set_index("open time")
     df = stockstats.StockDataFrame(df)
     return df
 

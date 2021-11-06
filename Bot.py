@@ -30,9 +30,12 @@ class Bot:
         while True:
             try:
                 if iterations % holdings_update_cycles == holdings_update_cycles - 1:
+
+                    temp_base_balance = self.usdt
                     self.refreshBalance()
                     self.generateBoughtStatus()
-                    print(f'- Balance: {self.usdt:.4f} {base_currency}')
+                    if temp_base_balance !=  self.usdt:
+                        print(f'- Balance: {self.usdt:.4f} {base_currency}')
 
                 for symbol in markets:
                     symbol = symbol + base_currency

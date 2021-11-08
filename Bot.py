@@ -65,7 +65,9 @@ class Bot:
                         if enterLong:
                             self.buy(symbol, klines)
 
-                sleep(30)
+                for i in range(30*4):
+                    self.plt.draw()
+                    sleep(0.25)
             except Exception as ex:
                 print(ex) 
                 sleep(10)
@@ -78,9 +80,10 @@ class Bot:
             symbol_orders = self.client.get_all_orders(symbol=coin, limit=1)
 
             if len(symbol_orders) > 0 and symbol_orders[0]['side'] == 'BUY' and symbol_orders[0]['status'] == 'FILLED':
-                print(f"{datetime.datetime.now()}: ", end="")
-                print(f'- {coin} is currently holding long')
-                self.bought[coin] = symbol_orders[0]
+                if coin not in self.bought or self.bought[coin] == None:
+                    print(f"{datetime.datetime.now()}: ", end="")
+                    print(f'- {coin} is holding long')
+                    self.bought[coin] = symbol_orders[0]
             else:
                 self.bought[coin] = None
 
@@ -134,6 +137,10 @@ class Bot:
 
         if symbol_balance * price > 10:
 
+            print(self.ticks)
+            print(f"truncate  {symbol}  {symbol_balance}  ", end="")
+            
+            print(f" {self.ticks[symbol]}")
             amount = truncate(symbol_balance, self.ticks[symbol])
 
             if not self.simulate:
@@ -173,6 +180,7 @@ class Bot:
             print(ex)
             for coin in markets:
                 coin += base_currency
+                print(f"getSymbolPrecision({coin})")
                 self.getSymbolPrecision(coin)
             savePickle(self.ticks, 'Ticks.pickle')
 
@@ -180,6 +188,7 @@ class Bot:
         for filt in self.client.get_symbol_info(symbol=symbol)['filters']:
             if filt['filterType'] == 'LOT_SIZE':
                 diff = filt['stepSize'].find('1') - filt['stepSize'].find('.')
+                print(f"ticks[{symbol}] = {max(diff, 0)}")
                 self.ticks[symbol] = max(diff, 0)
                 break
 
